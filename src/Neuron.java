@@ -4,66 +4,72 @@ import java.util.Random;
 public class Neuron {
 	protected int enforcementCounter;
 	protected ArrayList<Neuron> connections;
-	private Pipe pipe;
-	private int bit = -1;
-	private TimerHandler timer;
 	private String id;
-    private static Random rand = new Random();
-    private long lastFireTime;
-    private int ACTION_POTENTIAL = 10;
-	public Neuron(Pipe pipe, TimerHandler timer, String id){
-		this.pipe = pipe;
+	private static Random rand = new Random();
+	private int lastFireTime;
+	private int ACTION_POTENTIAL = 3;
+	private int energy = 0;
+	private Boolean isEnd = false;
+
+	public Neuron(String id){
 		connections = new ArrayList<Neuron>();
-		this.timer = timer;
 		this.id = id;
-		this.lastFireTime = System.currentTimeMillis()-ACTION_POTENTIAL;
+		this.lastFireTime = -1*ACTION_POTENTIAL;
 		System.out.println("Id: "+id);
+		Pipe.netSize++;
 	}
-	public void charge(Neuron source, int enforcement, int depth){
-		long time = System.currentTimeMillis();
-		if (time - lastFireTime < ACTION_POTENTIAL){
+	public void charge(int enforcement, int depth){
+		energy++;
+		int time = Tick.ticks;
+		if (energy < ACTION_POTENTIAL){
+			//System.out.println("AP!!! "  + (time-lastFireTime) + "  Res: " + ((time - lastFireTime) < ACTION_POTENTIAL));
 			return;
 		}
+		//System.out.println("NOT!!!");
 		lastFireTime = time;
-		if (depth>80) return;
-		enforcementCounter += enforcement;
-		if (enforcement<0){
-			shakeItUp();
-			enforcementCounter=1;
+		if (depth>1024) {
+			//System.out.println("Depth!!!");
+			return;
 		}
-		if (connections.size() == 0){
+		energy = 0;
+		Tick.tick();
+		enforcementCounter += enforcement;
+		if (enforcementCounter<0){
+			shakeItUp();
+			enforcementCounter = 0;
+		}
+		if (isEnd){
 			//Then this is an end neuron
 			queueBit();
-		}else{
-			for (int i=0; i<connections.size(); i++){
-				connections.get(i).charge(this, enforcement, ++depth);
-			}
+		}
+		for (int i=0; i<connections.size(); i++){
+			connections.get(i).charge(enforcement, ++depth);
 		}
 	}
-	public void initChildren(int size){
-		for (int i=0; i<size; ++i){
-			Neuron child = new Neuron(pipe, timer, id+size);
-			child.initChildren(--size);
+	public void initChildren(int size, Neuron parent, Integer ratio){
+		if (Pipe.netSize%ratio==0){
+			isEnd=true;
+			Pipe.write(id, false);
+		}
+		while (size>0){
+			Neuron child = new Neuron(id+size);
+			child.initChildren(--size, this, ratio);
 			connections.add(child);
 		}
 	}
 	public void shakeItUp(){
-		ACTION_POTENTIAL = randInt(20, 200);
+		//ACTION_POTENTIAL = randInt(20, 200);
 		if (connections.size()>0 && randCondition()){
 			connections.remove(randInt(0, connections.size()-1));
-			if (connections.size()==0){
-				bit = -1;
-			}
+			if (connections.size()==0) Pipe.endSize++;
 		}else{
 			Neuron mate = findNeuron(0);
 			mate.connect(this);
 			connections.add(mate);
-			if (timer!=null){
-				timer.removeTask(id);
-			}
+			if (connections.size() == 1) Pipe.endSize--;
 		}
 	}
-	private Neuron findNeuron(int depth){
+	public Neuron findNeuron(int depth){
 		if (connections.size() == 0){
 			return this;
 		}else if ((depth>0 && randCondition())){
@@ -76,19 +82,7 @@ public class Neuron {
 		//connections.add(connection);
 	}
 	private void queueBit(){
-		if (bit==-1){
-			// Set the timer
-			timer.addTask(id, new TimerHandler.TimerHandlerTask() {
-				public void task() {
-					write();
-				}
-			});
-		}
-		bit = 1;
-	}
-	private void write(){
-		pipe.write(bit);
-		bit = 0;
+		Pipe.write(id, true);
 	}
 	private static Boolean randCondition() {
 	    return rand.nextBoolean();
