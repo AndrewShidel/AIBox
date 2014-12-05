@@ -1,0 +1,15 @@
+# depslib dependency file v1.0
+1417649867 source:/home/andrew/projects/NeuralNetworl/main.cpp
+	<iostream>
+	<cmath>
+	"NeuralNetwork.h"
+
+1417719278 /home/andrew/projects/NeuralNetworl/include/NeuralNetwork.h
+	<vector>
+
+1417651226 source:/home/andrew/projects/NeuralNetworl/src/NeuralNetwork.cpp
+	"NeuralNetwork.h"
+	<cstdlib>
+	<ctime>
+	<iostream>
+

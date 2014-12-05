@@ -21,7 +21,7 @@ public class Neuron {
 	public void charge(int enforcement, int depth){
 		energy++;
 		int time = Tick.ticks;
-		if (energy < ACTION_POTENTIAL){
+		if (time-lastFireTime < ACTION_POTENTIAL){
 			//System.out.println("AP!!! "  + (time-lastFireTime) + "  Res: " + ((time - lastFireTime) < ACTION_POTENTIAL));
 			return;
 		}
