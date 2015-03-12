@@ -9,7 +9,7 @@ import Gates.Input;
 public abstract class Graph {
 	public ArrayList<ArrayList<Connection>> network;
 	public ArrayList<Gate> nodes;
-	private ArrayList<Integer> queue;
+	private ArrayList<Integer> queue, preQueue;
 	private int size;
 	private static final int bucketSize = 50;
 	
@@ -32,6 +32,7 @@ public abstract class Graph {
 		network = new ArrayList<ArrayList<Connection>>();
 		nodes = new ArrayList<Gate>();
 		queue = new ArrayList<Integer>();
+		preQueue = new ArrayList<Integer>();
 		
 		Random rand = new Random();
 		for (int i=0; i<size; i++) {
@@ -71,19 +72,41 @@ public abstract class Graph {
 	}
 	
 	private void startLearning() {
-		byte[] input = onInputRequested();
-		for (int i=0; i<input.length*8 && i<inputSize; i++) {
-			if (isSet(input, i)) {
-				ArrayList<Connection> connections = network.get(i);
-				for (Connection connection : connections) {
-					Gate gate = nodes.get(connection.index);
-					int terminalID = connection.terminalID;
-					if (terminalID == 0){
-						gate.term1 = true;
-					}else if (terminalID == 1){
-						gate.term2 = true;
+		while (true) {
+			byte[] input = onInputRequested();
+			for (int i=0; i<input.length*8 && i<inputSize; i++) {
+				if (isSet(input, i)) {
+					ArrayList<Connection> connections = network.get(i);
+					for (Connection connection : connections) {
+						Gate gate = nodes.get(connection.index);
+						int terminalID = connection.terminalID;
+						if (terminalID == 0){
+							gate.term1 = true;
+						}else if (terminalID == 1){
+							gate.term2 = true;
+						}
+						preQueue.add(connection.index);
 					}
-					queue.add(connection.index);
+				}
+			}
+			while (!preQueue.isEmpty()) {
+				for (Integer index : preQueue) {
+					if (nodes.get(index).isOpen()) {
+						queue.add(index);
+					}
+				}
+				for (Integer index : queue) {
+					ArrayList<Connection> connections = network.get(index);
+					for (Connection connection : connections) {
+						Gate gate = nodes.get(connection.index);
+						int terminalID = connection.terminalID;
+						if (terminalID == 0){
+							gate.term1 = true;
+						}else if (terminalID == 1){
+							gate.term2 = true;
+						}
+						preQueue.add(connection.index);
+					}
 				}
 			}
 		}
