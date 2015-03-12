@@ -80,9 +80,10 @@ public abstract class Graph {
 					int terminalID = connection.terminalID;
 					if (terminalID == 0){
 						gate.term1 = true;
-					}else if(terminalID == 1){
+					}else if (terminalID == 1){
 						gate.term2 = true;
 					}
+					queue.add(connection.index);
 				}
 			}
 		}
