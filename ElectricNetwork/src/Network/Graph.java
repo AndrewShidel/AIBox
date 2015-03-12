@@ -10,6 +10,7 @@ public abstract class Graph {
 	public ArrayList<ArrayList<Connection>> network;
 	public ArrayList<Gate> nodes;
 	private ArrayList<Integer> queue, preQueue;
+	private byte[] outputArray;
 	private int size;
 	private static final int bucketSize = 50;
 	
@@ -44,7 +45,7 @@ public abstract class Graph {
 			if (i < inputSize) {
 				gate = new Input();
 			} else if (i < inputSize + hiddenSize) {
-				int type = (int)(rand.nextFloat()*3);
+				int type = (int)(rand.nextFloat()*4);
 				switch (type) {
 				case 0:
 					gate = new And();
@@ -55,6 +56,8 @@ public abstract class Graph {
 				case 2:
 					gate = new Not();
 					break;
+				case 3:
+					gate = new Transistor();
 				}
 			} else {
 				gate = new Output();
@@ -72,6 +75,7 @@ public abstract class Graph {
 	}
 	
 	private void startLearning() {
+		outputArray = new byte[outputSize / 8];
 		while (true) {
 			byte[] input = onInputRequested();
 			for (int i=0; i<input.length*8 && i<inputSize; i++) {
@@ -109,6 +113,14 @@ public abstract class Graph {
 					}
 				}
 			}
+			int bitNum = 0;
+			for (int i=nodes.size() - outputSize - 1; i<nodes.size(); i++) {
+				if (((Output)nodes.get(i)).isSet()) {
+					setBit(bitNum);
+				}
+				bitNum++;
+			}
+			onOutput(outputArray);
 		}
 	}
 	
@@ -117,6 +129,12 @@ public abstract class Graph {
 	    int bitPosition = bit % 8;  // Position of this bit in a byte
 
 	    return (arr[index] >> bitPosition & 1) == 1;
+	}
+	
+	private void setBit(int index) {
+		int arrIndex = index/8;
+		byte byteIndex = (byte) (index%8);
+		outputArray[arrIndex] |= 1 << byteIndex;
 	}
 	
 	private Connection getRandomConnection(int fromIndex, Random rand) {
