@@ -17,7 +17,7 @@ public abstract class Graph {
 	private int inputSize, hiddenSize, outputSize;
 	
 	public abstract byte[] onInputRequested();
-	public abstract float onOutput(byte[] output);
+	public abstract byte[] onOutput(byte[] output);
 	public abstract void onLearningFinished();
 
 	
@@ -120,7 +120,19 @@ public abstract class Graph {
 				}
 				bitNum++;
 			}
-			onOutput(outputArray);
+			byte[] error = onOutput(outputArray);
+			
+			for (int i=0; i<error.length*8; i++) {
+				if (isSet(error, i)) {
+					// TODO: Backpropegate positive
+				} else {
+					// TODO: Backpropegate negative
+				}
+			}
+			
+			for (int i=0; i<nodes.size(); i++) {
+				nodes.get(i).reset();
+			}
 		}
 	}
 	
