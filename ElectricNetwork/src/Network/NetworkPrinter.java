@@ -4,11 +4,11 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 
 public class NetworkPrinter {
-	public static void print(Graph graph, PrintWriter output) {
+	public static void printDracula(Graph graph, PrintWriter output) {
 		String deps =     "<script type='text/javascript' src='raphael-min.js'></script>"
-						+ "<script type='text/javascript' src='dracula_graffle.js'></script>"
-						+ "<script type='text/javascript' src='jquery-1.4.2.min.js'></script>"
-						+ "<script type='text/javascript' src='dracula_graph.js'></script>";
+				+ "<script type='text/javascript' src='dracula_graffle.js'></script>"
+				+ "<script type='text/javascript' src='jquery-1.4.2.min.js'></script>"
+				+ "<script type='text/javascript' src='dracula_graph.js'></script>";
 		deps += "<style>\n#container{\nwidth:100%;\nheight:100%;\n}\n</style>";
 		output.write("<html><head>" + deps + "<script>\n");
 		output.write("window.onload=function(){\nvar g = new Graph();");
@@ -23,6 +23,39 @@ public class NetworkPrinter {
 		output.write("var renderer = new Graph.Renderer.Raphael('container', g, window.innerWidth, window.innerHeight);");
 		output.write("renderer.draw();\n}");
 		output.write("\n</script></head><body><div id='container'></div></body></html>");
+		output.close();
+	}
+	public static void printSpringy(Graph graph, PrintWriter output) {
+		String deps =   "<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js'></script>"
+						+ "<script src='springy.js'></script>"
+						+ "<script src='springyui.js'></script>";
+		deps += "<style>\n#container{\nwidth:100%;\nheight:100%;\n}\n</style>";
+		output.write("<html><head>" + deps + "<script>\n");
+		output.write("var graph = new Springy.Graph();");
+		
+		String names = "";
+		for (int i=0; i<graph.nodes.size(); i++) {
+			names += "var node" + i + " = graph.newNode({label: '"+i+"'});\n";
+		}
+		output.write("\n\n" + names + "\n");
+		
+		for (int i=0; i<graph.network.size(); i++) {
+			ArrayList<Graph.Connection> connections = graph.network.get(i);
+			for (Graph.Connection connection : connections) {
+				String color;
+				if (i < 8) {
+					color = "'#FF0000'";
+				}else if (connection.index > graph.network.size() - 8) {
+					color = "'#0000FF'";
+				}else{
+					color = "'#00FF00'";
+				}
+				output.write("graph.newEdge(node"+i+", node"+connection.index+", {color: "+color+"});\n");
+			}
+		}
+		output.write("\njQuery(function(){jQuery('#container').attr('width', window.innerWidth);jQuery('#container').attr('height', window.innerHeight); window.springy=jQuery('#container').springy({graph:graph,nodeSelected:function(e){console.log('Node selected: '+JSON.stringify(e.data))}})});");
+
+		output.write("\n</script></head><body><canvas id='container'/></body></html>");
 		output.close();
 	}
 }
