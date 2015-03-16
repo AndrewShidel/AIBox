@@ -9,7 +9,8 @@ public class AdditionNetwork extends Graph{
 	private Random rand = new Random(System.currentTimeMillis());
 	private short correctAnswer;
 	public AdditionNetwork() {
-		this.initialize(16, 128, 16, 10);
+		//this.initialize(16, 128, 16, 10);
+		this.initialize(8, 64, 8, 4);
 	}
 	@Override
 	public byte[] onInputRequested() {
