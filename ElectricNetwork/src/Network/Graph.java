@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import Gates.*;
-import Gates.Input;
 
 public abstract class Graph {
 	public ArrayList<ArrayList<Connection>> network;
@@ -12,7 +11,7 @@ public abstract class Graph {
 	private ArrayList<Integer> queue, preQueue;
 	private byte[] outputArray;
 	private int size;
-	private static final int bucketSize = 50;
+	public int bucketSize = 10;
 	
 	private int inputSize, hiddenSize, outputSize;
 	
@@ -66,30 +65,38 @@ public abstract class Graph {
 		}
 		
 		for (int i=0; i<inputSize+hiddenSize; i++) {
-			for (int j=0; j < rand.nextInt(maxConnections); j++) {
+			int numConnections = rand.nextInt(maxConnections);
+			if (numConnections == 0 && i < inputSize) {
+				numConnections = 1;
+			}
+			for (int j=0; j < numConnections; j++) {
 				Connection connection = getRandomConnection(i, rand);
 				network.get(i).add(connection);
 			}
 		}
-		startLearning();
 	}
 	
-	private void startLearning() {
+	
+	public void startLearning() {
 		outputArray = new byte[outputSize / 8];
 		while (true) {
 			byte[] input = onInputRequested();
 			for (int i=0; i<input.length*8 && i<inputSize; i++) {
 				if (isSet(input, i)) {
 					ArrayList<Connection> connections = network.get(i);
+					int j = 0;
 					for (Connection connection : connections) {
 						Gate gate = nodes.get(connection.index);
 						int terminalID = connection.terminalID;
 						if (terminalID == 0){
 							gate.term1 = true;
+							connection.lastConnected = new Point(i, j);
 						}else if (terminalID == 1){
 							gate.term2 = true;
+							connection.lastConnected = new Point(i, j);
 						}
 						preQueue.add(connection.index);
+						j++;
 					}
 				}
 			}
@@ -101,15 +108,19 @@ public abstract class Graph {
 				}
 				for (Integer index : queue) {
 					ArrayList<Connection> connections = network.get(index);
+					int j = 0;
 					for (Connection connection : connections) {
 						Gate gate = nodes.get(connection.index);
 						int terminalID = connection.terminalID;
 						if (terminalID == 0){
 							gate.term1 = true;
+							connection.lastConnected = new Point(index, j);
 						}else if (terminalID == 1){
 							gate.term2 = true;
+							connection.lastConnected = new Point(index, j);
 						}
 						preQueue.add(connection.index);
+						j++;
 					}
 				}
 			}
@@ -124,9 +135,10 @@ public abstract class Graph {
 			
 			for (int i=0; i<error.length*8; i++) {
 				if (isSet(error, i)) {
-					// TODO: Backpropegate positive
-				} else {
 					// TODO: Backpropegate negative
+					
+				} else {
+					// TODO: Backpropegate positive
 				}
 			}
 			
@@ -150,26 +162,43 @@ public abstract class Graph {
 	}
 	
 	private Connection getRandomConnection(int fromIndex, Random rand) {
+		if (fromIndex > inputSize+hiddenSize) 
+			return null;
 		int bucket = fromIndex/bucketSize;
+		int offset = size - bucket*bucketSize < bucketSize ? bucketSize - (size - bucket*bucketSize) : 0;
 		int toIndex;
-		if ((bucket+1)*bucketSize - fromIndex < 2 && rand.nextFloat() < .2) {
-			toIndex = ((int)(rand.nextFloat()*(size/bucketSize)))+1;
+		if (/*(bucket+1)*bucketSize - fromIndex < 2 && */rand.nextFloat() < .1) {
+			toIndex = (((int)(rand.nextFloat()*(size/bucketSize)))) * bucketSize + rand.nextInt((bucketSize-offset));
 		} else {
-			toIndex = bucket*bucketSize+rand.nextInt((bucketSize+1));
+			toIndex = bucket*bucketSize+rand.nextInt((bucketSize-offset));
+			if (toIndex > size)
+				return null;
+		}
+		if (toIndex < inputSize) {
+			return getRandomConnection(fromIndex, rand);
 		}
 		Connection connection = new Connection(toIndex, (byte)(rand.nextBoolean()==true?0:1));
 		
 		return connection;
 	}
-	private class Connection {
+	public static class Connection {
 		public int index;
 		public byte terminalID = -1; // -1 = output terminal
+		public Point lastConnected = null; // null = No one has connected to this terminal
 		public Connection(int index) {
 			this.index = index;
 		}
 		public Connection(int index, byte terminalID) {
 			this.index = index;
 			this.terminalID = terminalID;
+		}
+	}
+	public static class Point {
+		public int x;
+		public int y;
+		public Point(int x, int y) {
+			this.x = x;
+			this.y = y;
 		}
 	}
 }
