@@ -86,7 +86,7 @@ public abstract class Graph {
 					queue.add(connection.index);
 				}
 			}
-		}
+		}		
 	}
 	
 	private boolean isSet(byte[] arr, int bit) {
