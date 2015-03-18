@@ -11,4 +11,9 @@ public class Transistor extends Gate{
 	public void reset() {
 		term2 = false;
 	}
+	
+	@Override
+	public void setTerm1(boolean val) {
+		term1 = !term1;
+	}
 }
