@@ -10,7 +10,7 @@ public class AdditionNetwork extends Graph{
 	private short correctAnswer;
 	public AdditionNetwork() {
 		//this.initialize(16, 128, 16, 10);
-		this.initialize(8, 64, 8, 4);
+		this.initialize(16, 256, 16, 4);
 	}
 	@Override
 	public byte[] onInputRequested() {

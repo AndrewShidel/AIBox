@@ -12,5 +12,6 @@ public class Addition {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+		network.startLearning();
 	}
 }
