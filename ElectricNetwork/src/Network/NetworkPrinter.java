@@ -34,8 +34,13 @@ public class NetworkPrinter {
 		output.write("var graph = new Springy.Graph();");
 		
 		String names = "";
+		int numBuckets = graph.nodes.size()/graph.bucketSize;
+		
 		for (int i=0; i<graph.nodes.size(); i++) {
-			names += "var node" + i + " = graph.newNode({label: '"+i+"'});\n";
+			int bucket = i%numBuckets;
+			//String color = rainbow((int)(((double)bucket/numBuckets) * 240));
+			String color = rainbow(bucket, numBuckets);
+			names += "var node" + i + " = graph.newNode({label: '"+i+"', color: '"+color+"'});\n";
 		}
 		output.write("\n\n" + names + "\n");
 		
@@ -43,9 +48,9 @@ public class NetworkPrinter {
 			ArrayList<Graph.Connection> connections = graph.network.get(i);
 			for (Graph.Connection connection : connections) {
 				String color;
-				if (i < 8) {
-					color = "'#FF0000'";
-				}else if (connection.index > graph.network.size() - 8) {
+				if (i < graph.inputSize) {
+					color = "'#000000'";
+				}else if (connection.index > graph.inputSize + graph.hiddenSize - 1) {
 					color = "'#0000FF'";
 				}else{
 					color = "'#00FF00'";
@@ -57,5 +62,14 @@ public class NetworkPrinter {
 
 		output.write("\n</script></head><body><canvas id='container'/></body></html>");
 		output.close();
+	}
+
+	private static String rainbow(int length, int maxLength)
+	{
+	    double i = (length * 255 / maxLength);
+	    int r = (int) Math.round(Math.sin(0.024 * i + 0) * 127 + 128);
+	    int g = (int) Math.round(Math.sin(0.024 * i + 2) * 127 + 128);
+	    int b = (int) Math.round(Math.sin(0.024 * i + 4) * 127 + 128);
+	    return "rgb(" + r + "," + g + "," + b + ")";
 	}
 }
